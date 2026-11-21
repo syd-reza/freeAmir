@@ -1,6 +1,6 @@
 services:
     nginx:
-        image: ghcr.io/jooyeshgar/freeamir-nginx:latest
+        image: ghcr.io/syd-reza/freeamir-nginx:latest
         restart: unless-stopped
         ports:
             - '${APP_PORT:-80}:80'
@@ -20,7 +20,7 @@ services:
             start_period: 10s
 
     php-fpm:
-        image: ghcr.io/jooyeshgar/freeamir-app:latest
+        image: ghcr.io/syd-reza/freeamir-app:latest
         restart: unless-stopped
         environment:
             APP_ENV: '${APP_ENV:-production}'

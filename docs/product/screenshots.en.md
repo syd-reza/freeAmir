@@ -57,7 +57,7 @@ Below are previews of Amir's user interface.
 ## Run locally to explore
 
 ```bash
-docker run -d --name freeamir -p 80:80 ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+docker run -d --name freeamir -p 80:80 ghcr.io/syd-reza/freeamir-all-in-one:latest
 ```
 
 Once running, the application is available at http://localhost.

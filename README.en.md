@@ -32,7 +32,7 @@ Download the Windows executable from the [Releases](https://github.com/Jooyeshga
 ### 2. Single Docker command (quick testing, not recommended for production)
 
 ```bash
-docker run -d --name freeamir -p 80:80 ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+docker run -d --name freeamir -p 80:80 ghcr.io/syd-reza/freeamir-all-in-one:latest
 ```
 
 The application is available at http://localhost once running.
@@ -41,8 +41,8 @@ The application is available at http://localhost once running.
 
 ```bash
 mkdir freeamir && cd freeamir
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/.env.example
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/.env.example
 cp docker-compose.prebuilt.yml docker-compose.yml
 cp .env.example .env
 # Edit .env as needed

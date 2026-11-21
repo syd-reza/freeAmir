@@ -36,8 +36,8 @@ Uses pre-built images from GitHub Container Registry. No source code or build to
 **1. Download the Docker Compose file and environment template:**
 ```bash
 mkdir freeamir && cd freeamir
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/.env.example
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/.env.example
 cp docker-compose.prebuilt.yml docker-compose.yml
 cp .env.example .env
 ```
@@ -94,7 +94,7 @@ docker compose down
 
 **Pull and run:**
 ```bash
-docker run -d --name freeamir -p 80:80 -v freeamir-data:/var/lib/mysql ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+docker run -d --name freeamir -p 80:80 -v freeamir-data:/var/lib/mysql ghcr.io/syd-reza/freeamir-all-in-one:latest
 ```
 
 Access the application at http://localhost once startup completes.
@@ -110,7 +110,7 @@ Access the application at http://localhost once startup completes.
 >   -e APP_URL=http://your-domain.com \
 >   -e DB_PASSWORD=secret \
 >   -v freeamir-data:/var/lib/mysql \
->   ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+>   ghcr.io/syd-reza/freeamir-all-in-one:latest
 > ```
 
 **Check startup progress:**
@@ -138,7 +138,7 @@ Install directly on your server or workstation with PHP, Composer, Node.js, and 
 
 **1. Clone the repository:**
 ```bash
-git clone https://github.com/Jooyeshgar/FreeAmir.git
+git clone https://github.com/syd-reza/FreeAmir.git
 cd FreeAmir
 ```
 

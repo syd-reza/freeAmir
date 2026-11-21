@@ -41,7 +41,7 @@
 ### ۲. Docker تک‌دستوری (آزمایش سریع برای محیط عملیاتی توصیه نمی‌شود)
 
 ```bash
-docker run -d --name freeamir -p 80:80 ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+docker run -d --name freeamir -p 80:80 ghcr.io/syd-reza/freeamir-all-in-one:latest
 ```
 
 برنامه پس از اجرا در http://localhost در دسترس است.
@@ -50,8 +50,8 @@ docker run -d --name freeamir -p 80:80 ghcr.io/jooyeshgar/freeamir-all-in-one:la
 
 ```bash
 mkdir freeamir && cd freeamir
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
-curl -O https://raw.githubusercontent.com/Jooyeshgar/FreeAmir/main/docker/production/.env.example
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/docker-compose.prebuilt.yml
+curl -O https://raw.githubusercontent.com/syd-reza/FreeAmir/main/docker/production/.env.example
 cp docker-compose.prebuilt.yml docker-compose.yml
 cp .env.example .env
 # فایل .env را ویرایش کنید

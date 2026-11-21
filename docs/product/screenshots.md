@@ -57,7 +57,7 @@ description: "تصاویر محیط کاربری امیر"
 ## اجرای محلی برای مشاهده
 
 ```bash
-docker run -d --name freeamir -p 80:80 ghcr.io/jooyeshgar/freeamir-all-in-one:latest
+docker run -d --name freeamir -p 80:80 ghcr.io/syd-reza/freeamir-all-in-one:latest
 ```
 
 پس از اجرا، برنامه در آدرس http://localhost در دسترس خواهد بود.
