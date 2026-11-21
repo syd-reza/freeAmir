@@ -244,6 +244,11 @@ class ReportsController extends Controller
         return $this->fiscalYearOverviewService->balanceForSubjectIds([$data['subject_id']], intval($data['duration']));
     }
 
+    public function hub()
+    {
+        return view('reports.index');
+    }
+
     public function ledger()
     {
         $subjects = Subject::orderBy('code', 'asc')->whereIsRoot()->get();

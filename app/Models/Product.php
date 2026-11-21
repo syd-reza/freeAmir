@@ -18,6 +18,11 @@ class Product extends Model
 
     protected $fillable = [
         'code',
+        'website_id',
+        'purchase_price',
+        'website_price',
+        'website_stock',
+        'website_synced_at',
         'name',
         'sstid',
         'group',
@@ -40,6 +45,10 @@ class Product extends Model
     protected $casts = [
         'average_cost' => 'decimal:2',
         'selling_price' => 'decimal:2',
+        'purchase_price' => 'decimal:2',
+        'website_price' => 'decimal:2',
+        'website_stock' => 'float',
+        'website_synced_at' => 'datetime',
         'vat' => 'decimal:2',
     ];
 

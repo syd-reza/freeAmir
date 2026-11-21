@@ -24,16 +24,16 @@ class CoreNavigationTest extends TestCase
         $nodes = $this->flatten($tree);
         $coreNodes = array_values(array_filter($nodes, static fn (MenuItem $item): bool => str_starts_with($item->id, 'core.')));
 
-        self::assertCount(84, $coreNodes);
-        self::assertCount(70, array_filter($coreNodes, static fn (MenuItem $item): bool => $item->route !== null));
-        self::assertCount(14, array_filter($coreNodes, static fn (MenuItem $item): bool => $item->route === null));
+        self::assertCount(89, $coreNodes);
+        self::assertCount(74, array_filter($coreNodes, static fn (MenuItem $item): bool => $item->route !== null));
+        self::assertCount(15, array_filter($coreNodes, static fn (MenuItem $item): bool => $item->route === null));
         foreach ($coreNodes as $item) {
             if ($item->route !== null) {
                 self::assertTrue(Route::has($item->route), "Core navigation route [{$item->route}] must exist.");
             }
         }
         self::assertSame([
-            'core.home', 'core.portal', 'core.invoices', 'core.accounting', 'core.reports',
+            'core.home', 'core.store', 'core.portal', 'core.invoices', 'core.accounting', 'core.reports',
             'core.warehouse', 'core.hr', 'core.crm', 'core.management',
         ], array_map(static fn (array $node): string => $node['item']->id, $tree));
 

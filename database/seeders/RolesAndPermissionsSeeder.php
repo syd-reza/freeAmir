@@ -60,6 +60,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'cheques',
             'chequebooks',
             'invoices',
+            'investors',
+            'investors-capital',
+            'profit-settlements',
+            'store-sync',
+            'website-orders',
+            'website-customers',
             'ancillary-costs',
             'invoices.ancillary-costs',
             'invoices.payments',
@@ -178,6 +184,41 @@ class RolesAndPermissionsSeeder extends Seeder
                     ->orWhere('name', '=', 'change-company')
                     ->orWhereIn('name', ['home', 'home.*'])
                     ->orWhere('name', '=', 'attendance.attendance-logs.*'))
+                ->pluck('name')
+                ->toArray()
+        );
+
+        $teamMember = Role::firstOrCreate(['name' => __('Team Member'), 'guard_name' => 'web']);
+        $teamMember->syncPermissions(
+            (clone $permissions)
+                ->get()
+                ->filter(function ($permission) {
+                    $allowed = [
+                        'home', 'invoices.', 'ancillary-costs.', 'customers.', 'customer-groups.',
+                        'crm.', 'products.', 'product-groups.', 'warehouses.', 'warehouse.',
+                        'investors.', 'investors-capital.', 'profit-settlements.', 'store-sync.',
+                        'website-orders.', 'website-customers.',
+                        'reports.', 'commercial-ledgers.', 'subjects.', 'documents.',
+                    ];
+
+                    foreach ($allowed as $prefix) {
+                        if ($permission->name === $prefix || str_starts_with($permission->name, $prefix)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                })
+                ->pluck('name')
+                ->toArray()
+        );
+
+        $investorRole = Role::firstOrCreate(['name' => __('Investor'), 'guard_name' => 'web']);
+        $investorRole->syncPermissions(
+            (clone $permissions)
+                ->where(fn ($query) => $query
+                    ->where('name', 'LIKE', 'profit-settlements.%')
+                    ->orWhere('name', 'LIKE', 'home%'))
                 ->pluck('name')
                 ->toArray()
         );

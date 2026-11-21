@@ -18,6 +18,9 @@ use App\Models\Payroll;
 use App\Models\Product;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\WebsiteCustomer;
+use App\Models\WebsiteOrder;
+use App\Models\WebsiteOrderItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -386,6 +389,85 @@ class HomeService
         }
 
         return $total;
+    }
+
+    /**
+     * Real store statistics derived from products synchronized with the website.
+     *
+     * @return array<string, mixed>
+     */
+    public function storeOverview(): array
+    {
+        $base = Product::query()->whereNotNull('website_id');
+
+        return [
+            'count' => (clone $base)->count(),
+            'average_price' => (float) (clone $base)->avg('selling_price'),
+            'min_price' => (float) (clone $base)->min('selling_price'),
+            'max_price' => (float) (clone $base)->max('selling_price'),
+            'in_stock' => (clone $base)->where('website_stock', '>', 0)->count(),
+            'out_of_stock' => (clone $base)->where('website_stock', '=', 0)->count(),
+            'unknown_stock' => (clone $base)->whereNull('website_stock')->count(),
+            'last_synced_at' => (clone $base)->max('website_synced_at'),
+            'purchase_price_missing' => (clone $base)->where('purchase_price', '<=', 0)->count(),
+        ];
+    }
+
+    /**
+     * Real sales and customer statistics read from synchronized website orders.
+     *
+     * Amounts are in the store currency (Toman for this store) and are labelled
+     * as such, because accounting documents are kept in Rial.
+     *
+     * @return array<string, mixed>
+     */
+    public function storeSalesOverview(): array
+    {
+        $orders = WebsiteOrder::query();
+        $paid = (clone $orders)->whereIn('status', WebsiteOrder::PAID_STATUSES);
+        $paidOrders = (clone $paid)->count();
+        $sales = (float) (clone $paid)->sum('total');
+        $start = Carbon::now()->subDays(13)->startOfDay();
+        $dailyTotals = (clone $paid)
+            ->where('date_created', '>=', $start)
+            ->selectRaw('DATE(date_created) as day, SUM(total) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+        $daily = collect(range(0, 13))->map(function (int $offset) use ($start, $dailyTotals): array {
+            $date = $start->copy()->addDays($offset);
+            $key = $date->toDateString();
+
+            return [
+                'date' => $key,
+                'label' => jdate('m/d', $date->timestamp, '', 'Asia/Tehran', 'fa'),
+                'total' => (float) $dailyTotals->get($key, 0),
+            ];
+        });
+        $maxDaily = max(1, (float) $daily->max('total'));
+        $daily = $daily->map(fn (array $day): array => $day + [
+            'height' => max(4, (int) round(($day['total'] / $maxDaily) * 100)),
+        ]);
+
+        return [
+            'orders_count' => (clone $orders)->count(),
+            'paid_orders' => $paidOrders,
+            'completed_orders' => (clone $orders)->where('status', 'completed')->count(),
+            'processing_orders' => (clone $orders)->where('status', 'processing')->count(),
+            'cancelled_orders' => (clone $orders)->where('status', 'cancelled')->count(),
+            'sales' => $sales,
+            'average_order' => $paidOrders > 0 ? $sales / $paidOrders : 0.0,
+            'customers_count' => WebsiteCustomer::query()->count(),
+            'daily' => $daily,
+            'top_products' => WebsiteOrderItem::query()
+                ->whereHas('order', fn ($query) => $query->whereIn('status', WebsiteOrder::PAID_STATUSES))
+                ->selectRaw('name, SUM(quantity) as sold_quantity, SUM(total) as sold_total')
+                ->groupBy('name')
+                ->orderByDesc('sold_quantity')
+                ->limit(5)
+                ->get(),
+            'last_order_at' => (clone $orders)->max('date_created'),
+            'last_synced_at' => (clone $orders)->max('synced_at'),
+        ];
     }
 
     /**

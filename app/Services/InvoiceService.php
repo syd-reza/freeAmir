@@ -563,6 +563,9 @@ class InvoiceService
                 'cog_after' => $product?->average_cost ?? $unitPrice,                                            // must be updated after creating invoice
                 'quantity_at' => $quantityAt,                                                                    // stock level before this invoice was applied
                 'unit_price' => $unitPrice,
+                'unit_cost' => $product
+                    ? (float) ((float) $product->purchase_price > 0 ? $product->purchase_price : $product->average_cost)
+                    : 0,
                 'discount' => $itemDiscount,
                 'vat' => $itemVat,
                 'description' => $item['description'] ?? null,
@@ -577,6 +580,7 @@ class InvoiceService
 
                 if ($originalItem) {
                     $invoiceItemData['cog_after'] = $originalItem->cog_after;
+                    $invoiceItemData['unit_cost'] = $originalItem->unit_cost ?? $invoiceItemData['unit_cost'];
                 }
             }
 

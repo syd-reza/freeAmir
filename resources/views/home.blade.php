@@ -6,6 +6,10 @@
 
         @include('home._financial-values')
 
+        @include('home._store-overview')
+
+        @include('home._store-sales')
+
         @include('home._access-sections')
     </main>
 

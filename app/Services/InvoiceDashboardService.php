@@ -35,6 +35,9 @@ class InvoiceDashboardService
             'productSalesBreakdown' => $this->salesBreakdown($items, Product::class),
             'serviceSalesBreakdown' => $this->salesBreakdown($items, Service::class),
             'topSales' => $this->topSales($items),
+            'invoiceTrend' => $this->invoiceTrend($from, $to),
+            'latestSales' => $this->latestInvoices($from, $to, InvoiceType::SELL),
+            'latestPurchases' => $this->latestInvoices($from, $to, InvoiceType::BUY),
             'recentInvoices' => $this->recentInvoices($from, $to)
                 ->sortByDesc(fn (Invoice $invoice) => $invoice->date->format('Y-m-d').'-'.str_pad((string) $invoice->id, 12, '0', STR_PAD_LEFT))
                 ->take(8)
@@ -78,6 +81,64 @@ class InvoiceDashboardService
             ])
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->with('customer:id,name')
+            ->get(['id', 'number', 'date', 'amount', 'invoice_type', 'status', 'customer_id']);
+    }
+
+    /**
+     * Monthly invoice totals for sales and purchases in the selected period.
+     * Sales are net of sell returns and voids; purchases are net of buy returns.
+     */
+    private function invoiceTrend(Carbon $from, Carbon $to): array
+    {
+        $buckets = $this->monthlyBuckets($from, $to);
+
+        $invoices = Invoice::query()
+            ->whereIn('status', InvoiceStatus::approvedOrSettled())
+            ->whereIn('invoice_type', [
+                InvoiceType::SELL,
+                InvoiceType::BUY,
+                InvoiceType::RETURN_SELL,
+                InvoiceType::RETURN_BUY,
+                InvoiceType::VOID,
+            ])
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get(['id', 'date', 'amount', 'invoice_type']);
+
+        foreach ($invoices as $invoice) {
+            $key = $this->monthKey($invoice->date);
+
+            if (! isset($buckets[$key])) {
+                continue;
+            }
+
+            $amount = (float) $invoice->amount;
+
+            match ($invoice->invoice_type) {
+                InvoiceType::SELL => $buckets[$key]['sell'] += $amount,
+                InvoiceType::RETURN_SELL, InvoiceType::VOID => $buckets[$key]['sell'] -= $amount,
+                InvoiceType::BUY => $buckets[$key]['buy'] += $amount,
+                InvoiceType::RETURN_BUY => $buckets[$key]['buy'] -= $amount,
+                default => null,
+            };
+        }
+
+        return [
+            'labels' => array_keys($buckets),
+            'sell' => array_map(fn (array $bucket) => round($bucket['sell'], 2), array_values($buckets)),
+            'buy' => array_map(fn (array $bucket) => round($bucket['buy'], 2), array_values($buckets)),
+        ];
+    }
+
+    private function latestInvoices(Carbon $from, Carbon $to, InvoiceType $type): Collection
+    {
+        return Invoice::query()
+            ->where('invoice_type', $type)
+            ->whereIn('status', InvoiceStatus::approvedOrSettled())
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->with('customer:id,name')
+            ->orderByDesc('date')
+            ->orderByDesc('number')
+            ->limit(6)
             ->get(['id', 'number', 'date', 'amount', 'invoice_type', 'status', 'customer_id']);
     }
 

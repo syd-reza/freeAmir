@@ -41,6 +41,24 @@
     </div>
 
     <div class="col-span-2 md:col-span-1">
+        <x-input @input="$event.target.value = $store.utils.formatNumber($event.target.value)" name="purchase_price"
+            id="purchase_price" title="{{ __('Purchase price') }}" :value="old('purchase_price', $product->purchase_price ?? '')"
+            placeholder="{{ __('Please insert purchase price') }}" />
+        <span class="mt-1 block text-xs text-base-content/50">{{ __('Used to calculate the sale profit in weekly reports.') }}</span>
+    </div>
+
+    @if (! empty($product->website_id))
+        <div class="col-span-2 rounded-lg bg-base-200/60 p-3 text-sm">
+            <span class="font-semibold">{{ __('Store product') }}:</span>
+            <span dir="ltr">#{{ $product->website_id }}</span>
+            <span class="mx-2">|</span>
+            {{ __('Website stock') }}: {{ $product->website_stock === null ? '-' : formatNumber($product->website_stock) }}
+            <span class="mx-2">|</span>
+            {{ __('Last synced at') }}: {{ $product->website_synced_at ? convertToJalali($product->website_synced_at, true) : '-' }}
+        </div>
+    @endif
+
+    <div class="col-span-2 md:col-span-1">
         <x-input name="vat" id="vat" title="{{ __('VAT') }}" :value="old('vat', $product->vat ?? '')" placeholder="0" />
     </div>
 

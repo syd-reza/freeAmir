@@ -124,6 +124,24 @@ Route::group(['middleware' => ['auth', 'check-permission', 'ensure-feature-enabl
     Route::resource('services', Controllers\ServiceController::class);
     Route::resource('service-groups', Controllers\ServiceGroupController::class);
     Route::get('crm/dashboard', [Controllers\CrmDashboardController::class, 'index'])->name('crm.dashboard');
+    Route::get('store-sync', [Controllers\StoreSyncController::class, 'index'])->name('store-sync.index');
+    Route::post('store-sync', [Controllers\StoreSyncController::class, 'store'])->name('store-sync.store');
+    Route::post('store-sync/orders', [Controllers\StoreSyncController::class, 'storeOrders'])->name('store-sync.orders');
+    Route::get('website-orders', [Controllers\WebsiteOrderController::class, 'index'])->name('website-orders.index');
+    Route::get('website-orders/{websiteOrder}', [Controllers\WebsiteOrderController::class, 'show'])->name('website-orders.show');
+    Route::get('website-customers', [Controllers\WebsiteCustomerController::class, 'index'])->name('website-customers.index');
+
+    Route::post('investors/{investor}/capital', [Controllers\InvestorController::class, 'storeCapital'])->name('investors-capital.store');
+    Route::delete('investors/{investor}/capital/{transaction}', [Controllers\InvestorController::class, 'destroyCapital'])->name('investors-capital.destroy');
+    Route::resource('investors', Controllers\InvestorController::class);
+
+    Route::post('profit-settlements/{profitSettlement}/confirm', [Controllers\ProfitSettlementController::class, 'confirm'])->name('profit-settlements.confirm');
+    Route::post('profit-settlements/{profitSettlement}/mark-paid', [Controllers\ProfitSettlementController::class, 'markPaid'])->name('profit-settlements.mark-paid');
+    Route::get('profit-settlements/{profitSettlement}/print/{party}', [Controllers\ProfitSettlementController::class, 'print'])->name('profit-settlements.print');
+    Route::resource('profit-settlements', Controllers\ProfitSettlementController::class)
+        ->only(['index', 'store', 'show'])
+        ->parameters(['profit-settlements' => 'profitSettlement']);
+
     Route::get('customers/export', [Controllers\CustomerController::class, 'export'])->name('customers.export');
     Route::get('customers/import', [Controllers\CustomerController::class, 'importForm'])->name('customers.import');
     Route::post('customers/import', [Controllers\CustomerController::class, 'import'])->name('customers.import.store');
@@ -247,6 +265,7 @@ Route::group(['middleware' => ['auth', 'check-permission', 'ensure-feature-enabl
         Route::get('payroll-items/{payroll_item}/edit', [Controllers\PayrollController::class, 'editItem'])->name('payroll-items.edit');
         Route::put('payroll-items/{payroll_item}', [Controllers\PayrollController::class, 'updateItem'])->name('payroll-items.update');
     });
+    Route::get('warehouse', [Controllers\WarehouseController::class, 'single'])->name('warehouse.single');
     Route::get('warehouse/dashboard', [Controllers\WarehouseDashboardController::class, 'index'])->name('warehouse.dashboard');
 
     Route::get('commercial-ledgers', [Controllers\CommercialLedgerController::class, 'index'])->name('commercial-ledgers.index');
@@ -261,7 +280,10 @@ Route::group(['middleware' => ['auth', 'check-permission', 'ensure-feature-enabl
     Route::post('monthly-budgets/rollover', [Controllers\MonthlyBudgetController::class, 'rollover'])->name('budgets.rollover');
     Route::delete('monthly-budgets/{monthlyBudget}', [Controllers\MonthlyBudgetController::class, 'destroy'])->name('budgets.destroy');
 
+    Route::get('team-payments', [Controllers\TeamPaymentsController::class, 'index'])->name('salary.payrolls.team-payments');
+
     Route::group(['prefix' => 'reports', 'as' => 'reports.'], function () {
+        Route::get('/', [Controllers\ReportsController::class, 'hub'])->name('index');
         Route::get('ledger', [Controllers\ReportsController::class, 'ledger'])->name('ledger');
         Route::get('journal', [Controllers\ReportsController::class, 'journal'])->name('journal');
         Route::get('sub-ledger', [Controllers\ReportsController::class, 'subLedger'])->name('sub-ledger');

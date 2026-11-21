@@ -38,6 +38,11 @@ class UpdateProductRequest extends FormRequest
                 'string',
                 'regex:/^(\d{1,3}(,\d{3})*|\d+)(\\.\\d+)?$/',
             ],
+            'purchase_price' => [
+                'nullable',
+                'string',
+                'regex:/^(\d{1,3}(,\d{3})*|\d+)(\.\d+)?$/',
+            ],
             'selling_price' => [
                 'nullable',
                 'string',
@@ -72,6 +77,7 @@ class UpdateProductRequest extends FormRequest
 
         $validatedData['code'] ??= $this->route('product')->code;
         $validatedData['selling_price'] = convertToFloat(empty($validatedData['selling_price']) ? 0 : $validatedData['selling_price']);
+        $validatedData['purchase_price'] = convertToFloat(empty($validatedData['purchase_price']) ? 0 : str_replace(',', '', $validatedData['purchase_price']));
         $validatedData['quantity_warning'] = convertToFloat(empty($validatedData['quantity_warning']) ? 0 : str_replace(',', '', $validatedData['quantity_warning']));
         $validatedData['quantity'] = convertToFloat(empty($validatedData['quantity']) ? 0 : str_replace(',', '', $validatedData['quantity']));
         $validatedData['vat'] = convertToFloat(empty($validatedData['vat']) ? 0 : $validatedData['vat']);

@@ -76,6 +76,11 @@ class HomeController extends Controller
             'homeVariant' => $homeVariant,
         ];
 
+        if ($canInventory || $canSales) {
+            $data['storeOverview'] = $this->service->storeOverview();
+            $data['storeSales'] = $this->service->storeSalesOverview();
+        }
+
         if ($canFinancial) {
             $quickAccessAreas = collect([
                 'accounting' => $canFinancial,

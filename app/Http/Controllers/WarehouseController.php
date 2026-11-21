@@ -41,6 +41,32 @@ class WarehouseController extends Controller
         return view('warehouses.index', compact('warehouses', 'warehouseCount'))->with('fiscalYearClosed', FiscalYear::find(getActiveFiscalYear())?->isClosed() ?? false);
     }
 
+    public function single(Request $request): View
+    {
+        $warehouse = Warehouse::query()->orderBy('id')->firstOrFail();
+        $search = trim($request->string('search')->toString());
+        $query = Product::query()->with('productGroup:id,name')
+            ->when($search !== '', function ($query) use ($search): void {
+                $like = '%'.$search.'%';
+                $query->where(fn ($builder) => $builder->where('name', 'like', $like)->orWhere('code', 'like', $like));
+            });
+
+        $summary = [
+            'products' => Product::query()->count(),
+            'quantity' => (float) Product::query()->sum('quantity'),
+            'in_stock' => Product::query()->where('website_stock', '>', 0)->count(),
+            'out_of_stock' => Product::query()->where('website_stock', '=', 0)->count(),
+            'missing_purchase_price' => Product::query()->where('purchase_price', '<=', 0)->count(),
+        ];
+
+        return view('warehouse.single', [
+            'warehouse' => $warehouse,
+            'products' => $query->orderBy('name')->paginate(30)->withQueryString(),
+            'search' => $search,
+            'summary' => $summary,
+        ]);
+    }
+
     public function create()
     {
         return view('warehouses.create', ['warehouse' => new Warehouse]);
