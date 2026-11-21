@@ -6,13 +6,14 @@ on:
       - main
     tags:
       - 'v*'
+  workflow_dispatch: {}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write 
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -30,6 +31,47 @@ jobs:
 
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
+      # Images are always published to GHCR under the repository owner.
+      # Docker Hub is used only when DOCKERHUB_USERNAME / DOCKERHUB_TOKEN exist.
+      - name: Resolve image names
+        id: images
+        shell: bash
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          ghcr_base="ghcr.io/$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+
+          if [[ -n "${DOCKERHUB_USERNAME}" && -n "${DOCKERHUB_TOKEN}" ]]; then
+            dockerhub_base="$(echo "${DOCKERHUB_USERNAME}" | tr '[:upper:]' '[:lower:]')"
+            echo "dockerhub_enabled=true" >> "${GITHUB_OUTPUT}"
+          else
+            dockerhub_base=""
+            echo "dockerhub_enabled=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice title=Docker Hub skipped::DOCKERHUB_USERNAME and DOCKERHUB_TOKEN are not configured, so images are published to GitHub Container Registry only."
+          fi
+
+          echo "ghcr=${ghcr_base}" >> "${GITHUB_OUTPUT}"
+          echo "dockerhub=${dockerhub_base}" >> "${GITHUB_OUTPUT}"
+
+          # Build the multiline image list for each image family
+          append_images() {
+            local suffix="$1"
+            local output="$2"
+            {
+              echo "${output}<<EOF"
+              echo "${ghcr_base}/freeamir-${suffix}"
+              if [[ -n "${dockerhub_base}" ]]; then
+                echo "${dockerhub_base}/freeamir-${suffix}"
+              fi
+              echo "EOF"
+            } >> "${GITHUB_OUTPUT}"
+          }
+
+          append_images app app_images
+          append_images nginx nginx_images
+          append_images all-in-one all_images
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -38,6 +80,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to Docker Hub
+        if: steps.images.outputs.dockerhub_enabled == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -48,14 +91,12 @@ jobs:
         id: meta-app
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/jooyeshgar/freeamir-app
-            hadi60/freeamir-app
+          images: ${{ steps.images.outputs.app_images }}
           flavor: |
             latest=auto
 
       - name: Build and push App image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/production/php-fpm/Dockerfile
@@ -73,14 +114,12 @@ jobs:
         id: meta-nginx
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/jooyeshgar/freeamir-nginx
-            hadi60/freeamir-nginx
+          images: ${{ steps.images.outputs.nginx_images }}
           flavor: |
             latest=auto
 
       - name: Build and push Nginx image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/production/nginx/Dockerfile
@@ -93,14 +132,12 @@ jobs:
         id: meta-all-in-one
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ghcr.io/jooyeshgar/freeamir-all-in-one
-            hadi60/freeamir-all-in-one
+          images: ${{ steps.images.outputs.all_images }}
           flavor: |
             latest=auto
 
       - name: Build and push All in one image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./docker/all-in-one/Dockerfile
